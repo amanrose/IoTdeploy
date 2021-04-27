@@ -1,0 +1,49 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "prefix": {
+            "type": "string"
+        },  
+        "_artifactsLocation": {
+            "type": "string"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "iothubname": "[concat(parameters('prefix'), uniqueString(resourceGroup().id))]",
+        "iothubdeploymenturl": "[concat(parameters('_artifactsLocation'), '/', variables('iotHubTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+        "iotHubTemplateFileName": "iothub.json",
+        "dpsname": "[concat(parameters('prefix'), uniqueString(resourceGroup().id))]"
+    },
+    "resources": [
+        {
+            "name": "iothubdeployment",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('iothubdeploymenturl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "iothubname": {
+                        "value": "[variables('iothubname')]"
+                    },
+                    "dpsname": {
+                        "value": "[variables('dpsname')]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

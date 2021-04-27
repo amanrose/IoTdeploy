@@ -1,0 +1,38 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "iothubname": {
+            "type": "string"
+        },
+        "dpsname": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "iothubname": "[parameters('iothubname')]",
+        "dpsname": "[parameters('dpsname')]",
+        "location": "[parameters('location')]",
+        "skuName": "S1",
+        "skuUnits": "1",
+        "iotHubKeyName": "iothubowner"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Devices/IotHubs",
+            "apiVersion": "2020-08-01",
+            "name": "[variables('iothubname')]",
+            "location": "[variables('location')]",
+            "sku": {
+                "name": "[variables('skuName')]",
+                "capacity": "[variables('skuUnits')]"
+            },
+            "properties": {
+            }
+        }
+    ],
+    "outputs": {}
+}

@@ -3,21 +3,45 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "prefix": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "short prefix for deployment names"
+            }
         },  
         "_artifactsLocation": {
             "type": "string"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring"
+        },
+        "storageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_ZRS",
+                "Premium_LRS"
+            ],
+            "metadata": {
+                "description": "Storage Account type"
+            }
         }
     },
     "variables": {
         "location": "[resourceGroup().location]",
-        "iothubname": "[concat(parameters('prefix'), uniqueString(resourceGroup().id))]",
-        "iothubdeploymenturl": "[concat(parameters('_artifactsLocation'), '/', variables('iotHubTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+        "iotHubName": "[concat(parameters('prefix'), 'hub', uniqueString(resourceGroup().id))]",
+        "iotHubDeploymentUrl": "[concat(parameters('_artifactsLocation'), '/', variables('iotHubTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
         "iotHubTemplateFileName": "iothub.json",
-        "dpsname": "[concat(parameters('prefix'), uniqueString(resourceGroup().id))]"
+        "dpsName": "[concat(parameters('prefix'), 'dps', uniqueString(resourceGroup().id))]",
+        "dpsHubDeploymentUrl": "[concat(parameters('_artifactsLocation'), '/', variables('dpsHubTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+        "dpsHubTemplateFileName": "iotdps.json",
+        "skuName": "s1",
+        "skuUnits": "1",
+        "storageName": "[concat(parameters('prefix'), 'storage', uniqueString(resourceGroup().id))]",
+        "storageDeploymenturl": "[concat(parameters('_artifactsLocation'), '/', variables('storageHubTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+        "storageHubTemplateFileName": "storage.json",
+        "storageType": "[parameters('storageAccountType')]"
     },
     "resources": [
         {
@@ -28,18 +52,83 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('iothubdeploymenturl')]",
+                    "uri": "[variables('iotHubDeploymentUrl')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "iothubname": {
-                        "value": "[variables('iothubname')]"
-                    },
-                    "dpsname": {
-                        "value": "[variables('dpsname')]"
+                    "iotHubName": {
+                        "value": "[variables('iotHubName')]"
                     },
                     "location": {
                         "value": "[variables('location')]"
+                    },
+                    "skuName": {
+                        "value": "[variables('skuName')]"
+                    },
+                    "skuUnits": {
+                        "value": "[variables('skuUnits')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "dpsdeployment",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "dependsOn": [ 
+                "iothubdeployment" 
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('dpsHubDeploymentUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "iotHubName": {
+                        "value": "[variables('iotHubName')]"
+                    },
+                    "dpsName": {
+                        "value": "[variables('dpsName')]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "skuName": {
+                        "value": "[variables('skuName')]"
+                    },
+                    "skuUnits": {
+                        "value": "[variables('skuUnits')]"
+                    },
+                    "connectionString": {
+                        "value": "[reference('iothubdeployment').outputs.connectionString.value]"
+                    },
+                    "iotHubHostName": {
+                        "value": "[reference('iothubdeployment').outputs.iotHubHostName.value]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "storagedeployment",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('storageDeploymentUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "storageName": {
+                        "value": "[variables('storageName')]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "storageType": {
+                        "value": "[variables('storageType')]"
                     }
                 }
             }

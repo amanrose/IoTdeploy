@@ -2,37 +2,44 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "iothubname": {
-            "type": "string"
-        },
-        "dpsname": {
+        "iotHubName": {
             "type": "string"
         },
         "location": {
             "type": "string"
+        },
+        "skuName": {
+            "type": "string"
+        },
+        "skuUnits": {
+            "type": "string"
         }
     },
     "variables": {
-        "iothubname": "[parameters('iothubname')]",
-        "dpsname": "[parameters('dpsname')]",
-        "location": "[parameters('location')]",
-        "skuName": "S1",
-        "skuUnits": "1",
         "iotHubKeyName": "iothubowner"
     },
     "resources": [
         {
             "type": "Microsoft.Devices/IotHubs",
-            "apiVersion": "2020-08-01",
-            "name": "[variables('iothubname')]",
-            "location": "[variables('location')]",
+            "apiVersion": "2020-03-01",
+            "name": "[parameters('iothubname')]",
+            "location": "[parameters('location')]",
             "sku": {
-                "name": "[variables('skuName')]",
-                "capacity": "[variables('skuUnits')]"
+                "name": "[parameters('skuName')]",
+                "capacity": "[parameters('skuUnits')]"
             },
             "properties": {
             }
         }
     ],
-    "outputs": {}
+    "outputs": {
+        "connectionString": {
+            "type": "string",
+            "value": "[concat('HostName=', reference(resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))).hostName, ';SharedAccessKeyName=', variables('iotHubKeyName'), ';SharedAccessKey=', listkeys(resourceId('Microsoft.Devices/Iothubs/Iothubkeys', parameters('iotHubName'), variables('iotHubKeyName')), '2020-03-01').primaryKey)]"
+        },
+        "iotHubHostName": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))).hostName]"
+        }
+    }
 }
